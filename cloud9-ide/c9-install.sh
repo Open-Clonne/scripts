@@ -45,4 +45,4 @@ mkdir ~/projects_code
 cd ~/c9sdk
 
 # run command
-./server.js -p 8080 -l localhost -a : -w ~/projects_code 
+./server.js -p 8080 -l localhost -a : -w ~/projects_code
