@@ -10,4 +10,4 @@ echo "Starting up IDE"
 cd ~/c9sdk
 
 # run command
-./server.js -p 8080 -l localhost -a : -w /var/www
+./server.js -p 8080 -l localhost -a : -w /var/www 
