@@ -1,3 +1,2 @@
 # scripts
-
-All my command scripts, both good and bad
+All automation scripts
