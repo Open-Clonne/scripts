@@ -8,7 +8,6 @@ auth = tweepy.OAuthHandler(CONSUMER_KEY, CONSUMER_SECRET)
 auth.set_access_token(ACCESS_KEY, ACCESS_SECRET)
 api = tweepy.API(auth)
 
-FILE_NAME = 'lid.txt'
 
 def retrieve_id(file_name):
     f_read = open(file_name, 'r')
@@ -16,13 +15,15 @@ def retrieve_id(file_name):
     f_read.close()
     return lid
 
+
 def store_id(lid, file_name):
     f_write = open(file_name, 'w')
     f_write.write(str(lid))
     f_write.close()
     return
 
-def getExceptionMessage(msg):
+
+def get_exception_message(msg):
     words = msg.split(' ')
 
     errormsg = ""
@@ -35,10 +36,11 @@ def getExceptionMessage(msg):
 
     return errormsg
 
-def update_status_bot():
-    print('retrieving and replying to Grayson twitterbot hashtags...', flush=True)
 
-    lid = retrieve_id(FILE_NAME)
+def update_user_status():
+    print('retrieving and replying to hashtags...', flush=True)
+
+    lid = retrieve_id('user_status.txt')
     if not lid:
         print('no lid found')
 
@@ -47,29 +49,56 @@ def update_status_bot():
     for mention in reversed(mentions):
         try:
             lid = mention.id
-            store_id(lid, FILE_NAME)
+            store_id(lid, 'user_status.txt')
 
             if '#graytheexpert' in mention.full_text.lower():
-                print('Grayson twitterbot found hashtag and responding', flush=True)
+                print('found hashtag and responding and retweeting now', flush=True)
                 api.update_status('@' + mention.user.screen_name + '#grayTheExpert back to you!', mention.id)
-                print('Grayson twitterbot re-tweeting now', flush=True)
                 api.retweet(mention.id)
 
         except tweepy.TweepError as e:
             print('Error Code: ' + e.api_code)
-            print('Error Message: ' + getExceptionMessage(e.reason))
+            print('Error Message: ' + get_exception_message(e.reason))
+
 
 def update_home_timeline():
     print('home timeline management...', flush=True)
 
-    lid = retrieve_id(FILE_NAME)
+    lid = retrieve_id('timeline.txt')
     if not lid:
         print('no lid found')
 
     timeline = api.home_timeline(lid)
-    print('timeline data : ' + timeline)
+
+    for timeline_tweet in reversed(timeline):
+        try:
+            print('liking and retweeting all tweets in timeline now...', flush=True)
+
+            lid = timeline_tweet.id
+            store_id(lid, 'timeline.txt')
+
+            timeline_tweet.favorite()
+            timeline_tweet.retweet()
+
+        except tweepy.TweepError as e:
+            print('Error Message: ' + get_exception_message(e.reason))
+
+        except StopIteration:
+            break
+
+
+def update_follow_followers():
+    print('following followers...', flush=True)
+
+    user = api.me()
+    print(user)
     exit()
 
+    for follower in tweepy.Cursor(api.followers).items():
+        follower.follow()
+        print("Followed everyone that is following " + user.name)
+
+
 while True:
-    update_home_timeline()
-    time.sleep(15)
+    update_follow_followers()
+    time.sleep(100)
