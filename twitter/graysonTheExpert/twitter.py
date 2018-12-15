@@ -9,6 +9,8 @@ auth = tweepy.OAuthHandler(CONSUMER_KEY, CONSUMER_SECRET)
 auth.set_access_token(ACCESS_KEY, ACCESS_SECRET)
 api = tweepy.API(auth)
 
+CLONNEBOTS = '@natgraybillz @GurdipPradip @jptwerpsall @clonne101'
+
 
 def retrieve_id(file_name):
     f_read = open(file_name, 'r')
@@ -54,14 +56,18 @@ def update_user_mentions():
             store_id(lid, 'user_status.txt')
 
             if '#graytheexpert' in mention.full_text.lower():
-                print('found hash-tag and responding and re-tweeting now', flush=True)
-                api.update_status('@' + mention.user.screen_name + ' thanks sir #grayTheExpert', mention.id)
+                print('found hash-tag and responding, liking and re-tweeting now', flush=True)
+                api.update_status(
+                    '@' + mention.user.screen_name + ' good read there, thanks sir #grayTheExpert', mention.id
+                )
                 api.retweet(mention.id)
                 mention.favorite()
 
         except tweepy.TweepError as e:
-            print('Error Code: ' + e.api_code)
             print('Error Message: ' + get_exception_message(e.reason))
+
+        except StopIteration:
+            break
 
 
 def update_home_timeline():
@@ -145,29 +151,41 @@ def find_user_followers(user_id):
             break
 
 
-def update_user_status_hackernews():
+def update_user_status_hacker_news():
     print('\n')
     print('getting latest news from hacker_news and updating user status...', flush=True)
 
     hn = HackerNews()
 
     stories = hn.top_stories(limit=10)
-    print("deleted:")
-    print(stories[0].deleted)
-    print("by:")
-    print(stories[0].by)
-    print("url:")
-    print(stories[0].url)
-    print("title:")
-    print(stories[0].title)
-    exit()
+
     for story in stories:
-        print(story.item_type)
+        try:
+
+            lid_r = retrieve_id('hacker_news.txt')
+
+            lid = story.item_id
+
+            if lid > lid_r:
+                print('saving new high id now')
+                store_id(lid, 'hacker_news.txt')
+                print('hacker_news top story, responding, liking and re-tweeting now', flush=True)
+                tweet = api.update_status(story.title + '\n' + story.url + '\n By: ' + story.by + '\n' + CLONNEBOTS)
+                tweet.retweet()
+                tweet.favorite()
+            else:
+                print('no new top stories are available at this time', flush=True)
+
+        except tweepy.TweepError as e:
+            print('Error Message: ' + get_exception_message(e.reason))
+
+        except StopIteration:
+            break
 
 
 while True:
     #update_user_mentions()
     #update_home_timeline()
     #update_follow_followers()
-    update_user_status_hackernews()
-    # time.sleep(500)
+    update_user_status_hacker_news()
+    time.sleep(100)
