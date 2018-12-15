@@ -157,7 +157,7 @@ def update_user_status_hacker_news():
 
     hn = HackerNews()
 
-    stories = hn.top_stories(limit=10)
+    stories = hn.top_stories(limit=15)
 
     for story in stories:
         try:
@@ -167,7 +167,7 @@ def update_user_status_hacker_news():
             lid = story.item_id
 
             if lid > lid_r:
-                print('saving new high id now')
+                print('saving new lid now')
                 store_id(lid, 'hacker_news.txt')
                 print('hacker_news top story, responding, liking and re-tweeting now', flush=True)
                 tweet = api.update_status(story.title + '\n' + story.url + '\n By: ' + story.by + '\n' + CLONNEBOTS)
