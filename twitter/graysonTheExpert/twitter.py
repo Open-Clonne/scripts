@@ -1,6 +1,7 @@
-import tweepy
 import time
+import tweepy
 from keys import *
+from hackernews import HackerNews
 
 print('booting up Grayson twitterbot', flush=True)
 
@@ -37,7 +38,7 @@ def get_exception_message(msg):
     return error_message
 
 
-def update_user_status_mentions():
+def update_user_mentions():
     print('\n')
     print('retrieving and replying to hash-tags...', flush=True)
 
@@ -144,8 +145,29 @@ def find_user_followers(user_id):
             break
 
 
+def update_user_status_hackernews():
+    print('\n')
+    print('getting latest news from hacker_news and updating user status...', flush=True)
+
+    hn = HackerNews()
+
+    stories = hn.top_stories(limit=10)
+    print("deleted:")
+    print(stories[0].deleted)
+    print("by:")
+    print(stories[0].by)
+    print("url:")
+    print(stories[0].url)
+    print("title:")
+    print(stories[0].title)
+    exit()
+    for story in stories:
+        print(story.item_type)
+
+
 while True:
-    update_user_status_mentions()
-    update_home_timeline()
-    update_follow_followers()
-    time.sleep(500)
+    #update_user_mentions()
+    #update_home_timeline()
+    #update_follow_followers()
+    update_user_status_hackernews()
+    # time.sleep(500)
