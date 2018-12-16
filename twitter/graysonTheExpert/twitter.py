@@ -16,9 +16,11 @@ def check_rate_limit_remaining():
     print('\n')
     print('checking remaining request count...')
 
-    remaining = api.rate_limit_status()['resources']['application']['/application/rate_limit_status']['remaining']
-
-    return remaining
+    try:
+        remaining = api.rate_limit_status()['resources']['application']['/application/rate_limit_status']['remaining']
+        return remaining
+    except tweepy.TweepError as e:
+        print('Error Message: ' + get_exception_message(e.reason))
 
 
 def retrieve_id(file_name):
@@ -116,7 +118,7 @@ def update_home_timeline():
 
 def update_follow_followers():
     print('\n')
-    print('following followers...', flush=True)
+    print('following all new followers...', flush=True)
 
     user = api.me()
     followers = api.followers(user.id)
