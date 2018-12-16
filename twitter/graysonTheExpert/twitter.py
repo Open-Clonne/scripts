@@ -70,8 +70,6 @@ def update_user_mentions():
         try:
 
             if check_rate_limit_remaining() > 30:
-                lid = mention.id
-                store_id(lid, 'user_status.txt')
 
                 if '#graytheexpert' in mention.full_text.lower():
                     print('found hash-tag and responding, liking and re-tweeting now', flush=True)
@@ -80,6 +78,10 @@ def update_user_mentions():
                     )
                     api.retweet(mention.id)
                     mention.favorite()
+
+                lid = mention.id
+                store_id(lid, 'user_status.txt')
+
             else:
                 print('User mention respond, liking and re-tweeting exceeded for now...')
 
@@ -111,11 +113,11 @@ def update_home_timeline():
             if check_rate_limit_remaining() > 50:
                 print('liking and re-tweeting ' + str(timeline_tweet.id) + ' tweets in timeline now...', flush=True)
 
-                lid = timeline_tweet.id
-                store_id(lid, 'timeline.txt')
-
                 timeline_tweet.favorite()
                 timeline_tweet.retweet()
+
+                lid = timeline_tweet.id
+                store_id(lid, 'timeline.txt')
             else:
                 print('Timeline likes and re-tweets exceeded for now...')
 
@@ -232,13 +234,15 @@ def update_user_status_hacker_news():
 
             if lid > lid_r:
                 if check_rate_limit_remaining() > 100:
-                    print('saving new lid now')
-                    store_id(lid, 'hacker_news.txt')
                     print('hacker_news top story, responding, liking and re-tweeting now', flush=True)
 
                     tweet = api.update_status(
                         str(story.title) + '\n' + str(story.url) + '\n By: ' + str(story.by) + '\n' + '#hackernews' + '\n' + CLONNEBOTS
                     )
+
+                    print('saving new lid now')
+                    store_id(lid, 'hacker_news.txt')
+
                     tweet.retweet()
                     tweet.favorite()
                 else:
