@@ -1,5 +1,6 @@
 import time
 import tweepy
+import requests
 from keys import *
 from hackernews import HackerNews
 
@@ -170,7 +171,9 @@ def update_user_status_hacker_news():
                 print('saving new lid now')
                 store_id(lid, 'hacker_news.txt')
                 print('hacker_news top story, responding, liking and re-tweeting now', flush=True)
-                tweet = api.update_status(story.title + '\n' + story.url + '\n By: ' + story.by + '\n' + CLONNEBOTS)
+                tweet = api.update_status(
+                    story.title + '\n' + story.url + '\n By: ' + story.by + '\n' + '#hackernews' + '\n' + CLONNEBOTS
+                )
                 tweet.retweet()
                 tweet.favorite()
             else:
@@ -183,9 +186,41 @@ def update_user_status_hacker_news():
             break
 
 
+def update_user_status_news_api():
+    print('\n')
+    print('getting latest news from news_api and updating user status...', flush=True)
+
+    url = ('https://newsapi.org/v2/top-headlines?country=us&apiKey=' + NEWS_API_KEY)
+    response = requests.get(url)
+    top_headlines = response.json()
+
+    if top_headlines['status'] == 'ok':
+        for headline in top_headlines['articles']:
+            try:
+
+                print('news_api top story, responding, liking and re-tweeting now', flush=True)
+                tweet = api.update_status(
+                    headline['title'] + '\n' + headline['url'] + '\n By: ' + headline['source']['name'] + '\n' + '#newsapi' + '\n' + CLONNEBOTS
+                )
+                tweet.retweet()
+                tweet.favorite()
+
+            except tweepy.TweepError as e:
+                if not e.api_code == 187:
+                    print('Error Message: ' + get_exception_message(e.reason))
+                else:
+                    continue
+
+            except StopIteration:
+                break
+    else:
+        print('Could not get top_headlines from news_api')
+
+
 while True:
-    #update_user_mentions()
-    #update_home_timeline()
-    #update_follow_followers()
+    update_user_mentions()
+    update_home_timeline()
+    update_follow_followers()
     update_user_status_hacker_news()
-    time.sleep(100)
+    update_user_status_news_api()
+    time.sleep(500)
