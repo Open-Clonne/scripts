@@ -83,7 +83,7 @@ def update_home_timeline():
 
     for timeline_tweet in reversed(timeline):
         try:
-            print('liking and re-tweeting ' + timeline_tweet.id + ' tweets in timeline now...', flush=True)
+            print('liking and re-tweeting ' + str(timeline_tweet.id) + ' tweets in timeline now...', flush=True)
 
             lid = timeline_tweet.id
             store_id(lid, 'timeline.txt')
