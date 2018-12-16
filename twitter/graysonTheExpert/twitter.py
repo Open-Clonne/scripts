@@ -1,8 +1,8 @@
+import time
 import tweepy
 import requests
 from keys import *
 from hackernews import HackerNews
-from twisted.internet import task, reactor
 
 print('booting up clonneBot[Grayson]', flush=True)
 
@@ -316,45 +316,37 @@ def update_user_status_news_api():
 
 while True:
     # 15 minutes
-    timeout = 600
+    timeout = 950.0
 
     # following
     try:
-        follow_followers = task.LoopingCall(update_follow_followers())
-        follow_followers.start(timeout)
-    except tweepy.TweepError as e:
+        update_follow_followers()
+    except Exception as e:
         print('Error Message: ' + get_exception_message(e.reason))
 
     # timeline
     try:
-        home_timeline = task.LoopingCall(update_home_timeline())
-        home_timeline.start(timeout)
-    except tweepy.TweepError as e:
+        update_home_timeline()
+    except Exception as e:
         print('Error Message: ' + get_exception_message(e.reason))
 
     # mentions
     try:
-        mentions = task.LoopingCall(update_user_mentions())
-        mentions.start(timeout)
-    except tweepy.TweepError as e:
+        update_user_mentions()
+    except Exception as e:
         print('Error Message: ' + get_exception_message(e.reason))
 
     # hacker_news
     try:
-        hacker_news = task.LoopingCall(update_user_status_hacker_news())
-        hacker_news.start(timeout)
-    except tweepy.TweepError as e:
+        update_user_status_hacker_news()
+    except Exception as e:
         print('Error Message: ' + get_exception_message(e.reason))
 
     # news_api
     try:
-        news_api = task.LoopingCall(update_user_status_news_api())
-        news_api.start(timeout)
-    except tweepy.TweepError as e:
+        update_user_status_news_api()
+    except Exception as e:
         print('Error Message: ' + get_exception_message(e.reason))
 
     # boot
-    try:
-        reactor.run()
-    except tweepy.TweepError as e:
-        print('Error Message: ' + get_exception_message(e.reason))
+    time.sleep(timeout)
