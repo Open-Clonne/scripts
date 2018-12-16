@@ -104,52 +104,68 @@ def update_follow_followers():
 
     user = api.me()
     followers = api.followers(user.id)
+    print(user.__dict__.keys())
+    exit()
 
-    for follower in reversed(followers):
-        try:
-            if not follower.following:
-                if follower.id == user.id:
-                    print('Not following self, passing on...')
-                    continue
+    if (user.friends_count < 2000) and (user.followers_count + 1000) < 2000:
+        for follower in reversed(followers):
+            try:
+                if not follower.following:
+                    if follower.id == user.id:
+                        print('Not following self, passing on...')
+                        continue
+                    else:
+                        follower.follow()
+                        print("Followed everyone that is following " + user.name)
                 else:
-                    follower.follow()
-                    print("Followed everyone that is following " + user.name)
-            else:
-                print('All following has been completed and none found so finding user followers')
-                find_user_followers(follower.id)
+                    print('All following has been completed and none found so finding user followers')
+                    find_user_followers(follower.id)
 
-        except tweepy.TweepError as e:
-            print('Error Message: ' + get_exception_message(e.reason))
+            except tweepy.TweepError as e:
+                print('Error Message: ' + get_exception_message(e.reason))
 
-        except StopIteration:
-            break
+            except StopIteration:
+                break
+    else:
+        print('Following has been put on hold till followers pick up')
 
 
-def find_user_followers(user_id):
+
+def find_user_followers(follower_id):
     print('\n')
     print('Finding user and followers and following them')
 
-    user = api.get_user(user_id)
-    followers = api.followers(user_id)
+    f_user = api.get_user(follower_id)
+    user = api.me()
 
-    for follower in reversed(followers):
-        try:
-            if follower.following:
-                print('Already following ' + follower.name + ' so moving on...')
-                continue
-            else:
-                if follower.id == user.id:
-                    print('Not following self, passing on...')
+    f_followers = api.followers(follower_id)
+
+    if (user.friends_count < 2000) and (user.followers_count + 1000) < 2000:
+        i = 5
+        for i, follower in enumerate(f_followers):
+            try:
+                if (user.friends_count < 2000) and (user.followers_count + 1000) < 2000:
+                    print('Following has been put on hold till followers pick up')
+                    break
+
+                if follower.following:
+                    print('Already following ' + follower.name + ' so moving on...')
                     continue
                 else:
-                    follower.follow()
-                    print("Followed everyone that is following " + user.name)
+                    if follower.id == f_user.id:
+                        print('Not following self, passing on...')
+                        continue
+                    else:
+                        follower.follow()
+                        print("Followed everyone that is following " + f_user.name)
 
-        except tweepy.TweepError as e:
-            print('Error Message: ' + get_exception_message(e.reason))
+            except tweepy.TweepError as e:
+                print('Error Message: ' + get_exception_message(e.reason))
 
-        except StopIteration:
-            break
+            except StopIteration:
+                break
+    else:
+        print('Following has been put on hold till followers pick up')
 
 
 def update_user_status_hacker_news():
@@ -218,9 +234,9 @@ def update_user_status_news_api():
 
 
 while True:
-    update_user_mentions()
-    update_home_timeline()
+    #update_user_mentions()
+    #update_home_timeline()
+    #update_user_status_hacker_news()
+    #update_user_status_news_api()
     update_follow_followers()
-    update_user_status_hacker_news()
-    update_user_status_news_api()
     time.sleep(500)
