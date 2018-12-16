@@ -326,20 +326,35 @@ while True:
         print('Error Message: ' + get_exception_message(e.reason))
 
     # timeline
-    home_timeline = task.LoopingCall(update_home_timeline())
-    home_timeline.start(timeout)
+    try:
+        home_timeline = task.LoopingCall(update_home_timeline())
+        home_timeline.start(timeout)
+    except tweepy.TweepError as e:
+        print('Error Message: ' + get_exception_message(e.reason))
 
     # mentions
-    mentions = task.LoopingCall(update_user_mentions())
-    mentions.start(timeout)
+    try:
+        mentions = task.LoopingCall(update_user_mentions())
+        mentions.start(timeout)
+    except tweepy.TweepError as e:
+        print('Error Message: ' + get_exception_message(e.reason))
 
     # hacker_news
-    hacker_news = task.LoopingCall(update_user_status_hacker_news())
-    hacker_news.start(timeout)
+    try:
+        hacker_news = task.LoopingCall(update_user_status_hacker_news())
+        hacker_news.start(timeout)
+    except tweepy.TweepError as e:
+        print('Error Message: ' + get_exception_message(e.reason))
 
     # news_api
-    news_api = task.LoopingCall(update_user_status_news_api())
-    news_api.start(timeout)
+    try:
+        news_api = task.LoopingCall(update_user_status_news_api())
+        news_api.start(timeout)
+    except tweepy.TweepError as e:
+        print('Error Message: ' + get_exception_message(e.reason))
 
     # boot
-    reactor.run()
+    try:
+        reactor.run()
+    except tweepy.TweepError as e:
+        print('Error Message: ' + get_exception_message(e.reason))
