@@ -1,4 +1,3 @@
-import time
 import tweepy
 import requests
 from keys import *
@@ -11,6 +10,15 @@ auth.set_access_token(ACCESS_KEY, ACCESS_SECRET)
 api = tweepy.API(auth)
 
 CLONNEBOTS = '@natgraybillz @GurdipPradip @jptwerpsall @clonne101'
+
+
+def check_rate_limit_remaining():
+    print('\n')
+    print('checking remaining request count...')
+
+    remaining = api.rate_limit_status()['resources']['application']['/application/rate_limit_status']['remaining']
+
+    return remaining
 
 
 def retrieve_id(file_name):
@@ -53,16 +61,20 @@ def update_user_mentions():
 
     for mention in reversed(mentions):
         try:
-            lid = mention.id
-            store_id(lid, 'user_status.txt')
 
-            if '#graytheexpert' in mention.full_text.lower():
-                print('found hash-tag and responding, liking and re-tweeting now', flush=True)
-                api.update_status(
-                    '@' + mention.user.screen_name + ' good read there, thanks sir #grayTheExpert', mention.id
-                )
-                api.retweet(mention.id)
-                mention.favorite()
+            if check_rate_limit_remaining() > 30:
+                lid = mention.id
+                store_id(lid, 'user_status.txt')
+
+                if '#graytheexpert' in mention.full_text.lower():
+                    print('found hash-tag and responding, liking and re-tweeting now', flush=True)
+                    api.update_status(
+                        '@' + mention.user.screen_name + ' good read there, thanks sir #grayTheExpert', mention.id
+                    )
+                    api.retweet(mention.id)
+                    mention.favorite()
+            else:
+                print('User mention respond, liking and re-tweeting exceeded for now...')
 
         except tweepy.TweepError as e:
             print('Error Message: ' + get_exception_message(e.reason))
@@ -83,13 +95,17 @@ def update_home_timeline():
 
     for timeline_tweet in reversed(timeline):
         try:
-            print('liking and re-tweeting ' + str(timeline_tweet.id) + ' tweets in timeline now...', flush=True)
 
-            lid = timeline_tweet.id
-            store_id(lid, 'timeline.txt')
+            if check_rate_limit_remaining() > 50:
+                print('liking and re-tweeting ' + str(timeline_tweet.id) + ' tweets in timeline now...', flush=True)
 
-            timeline_tweet.favorite()
-            timeline_tweet.retweet()
+                lid = timeline_tweet.id
+                store_id(lid, 'timeline.txt')
+
+                timeline_tweet.favorite()
+                timeline_tweet.retweet()
+            else:
+                print('Timeline likes and re-tweets exceeded for now...')
 
         except tweepy.TweepError as e:
             print('Error Message: ' + get_exception_message(e.reason))
@@ -113,11 +129,19 @@ def update_follow_followers():
                         print('Not following self, passing on...')
                         continue
                     else:
-                        follower.follow()
-                        print("Followed everyone that is following " + user.name)
+                        if check_rate_limit_remaining() > 160:
+                            follower.follow()
+                            print("Followed everyone that is following " + user.name)
+                        else:
+                            print('Follow limit exceeded, no more following for now')
+                            break
                 else:
-                    print('All following has been completed and none found so finding user followers')
-                    find_user_followers(follower.id)
+                    if check_rate_limit_remaining() > 160:
+                        print('All following has been completed and none found so finding user followers')
+                        find_user_followers(follower.id)
+                    else:
+                        print('Follow limit exceeded, no more following for now')
+                        break
 
             except tweepy.TweepError as e:
                 print('Error Message: ' + get_exception_message(e.reason))
@@ -138,7 +162,7 @@ def find_user_followers(follower_id):
     f_followers = api.followers(follower_id)
 
     if (user.friends_count < 1000) and (user.followers_count + 500) < 1000:
-        i = 5
+        i = 10
         for i, follower in enumerate(f_followers):
             try:
                 if (user.friends_count < 1000) and (user.followers_count + 500) < 1000:
@@ -153,8 +177,12 @@ def find_user_followers(follower_id):
                         print('Not following self, passing on...')
                         continue
                     else:
-                        follower.follow()
-                        print("Followed everyone that is following " + f_user.name)
+                        if check_rate_limit_remaining() > 160:
+                            follower.follow()
+                            print("Followed everyone that is following " + f_user.name)
+                        else:
+                            print('Follow limit exceeded, no more following for now')
+                            break
 
             except tweepy.TweepError as e:
                 print('Error Message: ' + get_exception_message(e.reason))
@@ -181,14 +209,19 @@ def update_user_status_hacker_news():
             lid = story.item_id
 
             if lid > lid_r:
-                print('saving new lid now')
-                store_id(lid, 'hacker_news.txt')
-                print('hacker_news top story, responding, liking and re-tweeting now', flush=True)
-                tweet = api.update_status(
-                    story.title + '\n' + story.url + '\n By: ' + story.by + '\n' + '#hackernews' + '\n' + CLONNEBOTS
-                )
-                tweet.retweet()
-                tweet.favorite()
+                if check_rate_limit_remaining() > 100:
+                    print('saving new lid now')
+                    store_id(lid, 'hacker_news.txt')
+                    print('hacker_news top story, responding, liking and re-tweeting now', flush=True)
+
+                    tweet = api.update_status(
+                        str(story.title) + '\n' + str(story.url) + '\n By: ' + str(story.by) + '\n' + '#hackernews' + '\n' + CLONNEBOTS
+                    )
+                    tweet.retweet()
+                    tweet.favorite()
+                else:
+                    print('Status update limit has been reached for now...')
+                    break
             else:
                 print('no new top stories are available at this time', flush=True)
 
@@ -211,12 +244,20 @@ def update_user_status_news_api():
         for headline in top_headlines['articles']:
             try:
 
-                print('news_api top story, responding, liking and re-tweeting now', flush=True)
-                tweet = api.update_status(
-                    headline['title'] + '\n' + headline['url'] + '\n By: ' + headline['source']['name'] + '\n' + '#newsapi' + '\n' + CLONNEBOTS
-                )
-                tweet.retweet()
-                tweet.favorite()
+                if check_rate_limit_remaining() > 100:
+                    print('news_api top story, responding, liking and re-tweeting now', flush=True)
+                    tweet = api.update_status(
+                        str(headline['title']) + '\n' +
+                        str(headline['url']) + '\n By: ' +
+                        str(headline['source']['name']) + '\n' +
+                        '#newsapi' + '\n' +
+                        CLONNEBOTS
+                    )
+                    tweet.retweet()
+                    tweet.favorite()
+                else:
+                    print('Status update limit has been reached for now...')
+                    break
 
             except tweepy.TweepError as e:
                 if not e.api_code == 187:
@@ -231,9 +272,15 @@ def update_user_status_news_api():
 
 
 while True:
-    update_user_mentions()
-    update_home_timeline()
+    update_follow_followers()
     update_user_status_hacker_news()
     update_user_status_news_api()
-    update_follow_followers()
-    time.sleep(500)
+    update_user_mentions()
+    update_home_timeline()
+
+    for minutes in range(0, 59):
+        if minutes not in {0, 15, 30, 45}:
+            snooze = 15 - minutes % 15
+            print('minutes:', minutes, ' sleep({}):'.format(snooze * 60))
+        else:
+            print('minutes:', minutes, ' no sleep')
