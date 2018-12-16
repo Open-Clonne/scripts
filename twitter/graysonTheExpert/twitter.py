@@ -2,8 +2,9 @@ import tweepy
 import requests
 from keys import *
 from hackernews import HackerNews
+from twisted.internet import task, reactor
 
-print('booting up Grayson twitterbot', flush=True)
+print('booting up clonneBot[Grayson]', flush=True)
 
 auth = tweepy.OAuthHandler(CONSUMER_KEY, CONSUMER_SECRET)
 auth.set_access_token(ACCESS_KEY, ACCESS_SECRET)
@@ -40,17 +41,6 @@ def get_exception_message(msg):
     return error_message
 
 
-def check_rate_limit_remaining():
-    print('\n')
-    print('checking remaining request count...')
-
-    try:
-        remaining = api.rate_limit_status()['resources']['application']['/application/rate_limit_status']['remaining']
-        return remaining
-    except tweepy.TweepError as e:
-        print('Error Message: ' + get_exception_message(e.reason))
-
-
 def update_user_mentions():
     print('\n')
     print('retrieving and replying to hash-tags...', flush=True)
@@ -59,17 +49,21 @@ def update_user_mentions():
     if not lid:
         print('no lid found')
 
+    print('checking remaining request count...')
     try:
-        check_rate_limit_remaining()
+        remaining = api.rate_limit_status()['resources']['application']['/application/rate_limit_status']['remaining']
     except tweepy.TweepError as e:
         print('Error Message: ' + get_exception_message(e.reason))
 
-    mentions = api.mentions_timeline(lid, tweet_mode='extended')
+    try:
+        mentions = api.mentions_timeline(lid, tweet_mode='extended')
+    except tweepy.TweepError as e:
+        print('Error Message: ' + get_exception_message(e.reason))
 
     for mention in reversed(mentions):
         try:
 
-            if check_rate_limit_remaining() > 30:
+            if remaining > 30:
 
                 if '#graytheexpert' in mention.full_text.lower():
                     print('found hash-tag and responding, liking and re-tweeting now', flush=True)
@@ -100,17 +94,21 @@ def update_home_timeline():
     if not lid:
         print('no lid found')
 
+    print('checking remaining request count...')
     try:
-        check_rate_limit_remaining()
+        remaining = api.rate_limit_status()['resources']['application']['/application/rate_limit_status']['remaining']
     except tweepy.TweepError as e:
         print('Error Message: ' + get_exception_message(e.reason))
 
-    timeline = api.home_timeline(lid)
+    try:
+        timeline = api.home_timeline(lid)
+    except tweepy.TweepError as e:
+        print('Error Message: ' + get_exception_message(e.reason))
 
     for timeline_tweet in reversed(timeline):
         try:
 
-            if check_rate_limit_remaining() > 50:
+            if remaining > 50:
                 print('liking and re-tweeting ' + str(timeline_tweet.id) + ' tweets in timeline now...', flush=True)
 
                 timeline_tweet.favorite()
@@ -132,13 +130,20 @@ def update_follow_followers():
     print('\n')
     print('following all new followers...', flush=True)
 
+    print('checking remaining request count...')
+    remaining = ''
     try:
-        check_rate_limit_remaining()
+        remaining = api.rate_limit_status()['resources']['application']['/application/rate_limit_status']['remaining']
     except tweepy.TweepError as e:
         print('Error Message: ' + get_exception_message(e.reason))
 
-    user = api.me()
-    followers = api.followers(user.id)
+    followers = []
+    user = []
+    try:
+        user = api.me()
+        followers = api.followers(user.id)
+    except tweepy.TweepError as e:
+        print('Error Message: ' + get_exception_message(e.reason))
 
     if (user.friends_count < 1000) and (user.followers_count + 500) < 1000:
         for follower in reversed(followers):
@@ -148,65 +153,60 @@ def update_follow_followers():
                         print('Not following self, passing on...')
                         continue
                     else:
-                        if check_rate_limit_remaining() > 160:
+                        if remaining > 160:
                             follower.follow()
                             print("Followed everyone that is following " + user.name)
                         else:
                             print('Follow limit exceeded, no more following for now')
                             break
                 else:
-                    if check_rate_limit_remaining() > 160:
+                    if remaining > 160:
                         print('All following has been completed and none found so finding user followers')
-                        find_user_followers(follower.id)
+
+                        print('\n')
+                        print('Finding user and followers and following them')
+
+                        try:
+                            f_user = api.get_user(follower.id)
+                        except tweepy.TweepError as e:
+                            print('Error Message: ' + get_exception_message(e.reason))
+
+                        f_followers = api.followers(follower.id)
+
+                        if (user.friends_count < 1000) and (user.followers_count + 500) < 1000:
+
+                            for f_follower in reversed(f_followers):
+                                try:
+                                    if (user.friends_count < 1000) and (user.followers_count + 500) < 1000:
+                                        print('Following has been put on hold till followers pick up')
+                                        break
+
+                                    if f_follower.following:
+                                        print('Already following ' + f_follower.name + ' so moving on...')
+                                        continue
+                                    else:
+                                        if f_follower.id == f_user.id:
+                                            print('Not following self, passing on...')
+                                            continue
+                                        else:
+                                            if remaining > 160:
+                                                f_follower.follow()
+                                                print("Followed everyone that is following " + f_user.name)
+                                            else:
+                                                print('Follow limit exceeded, no more following for now')
+                                                break
+
+                                except tweepy.TweepError as e:
+                                    print('Error Message: ' + get_exception_message(e.reason))
+
+                                except StopIteration:
+                                    break
+                        else:
+                            print('Following has been put on hold till followers pick up')
+
                     else:
                         print('Follow limit exceeded, no more following for now')
                         break
-
-            except tweepy.TweepError as e:
-                print('Error Message: ' + get_exception_message(e.reason))
-
-            except StopIteration:
-                break
-    else:
-        print('Following has been put on hold till followers pick up')
-
-
-def find_user_followers(follower_id):
-    print('\n')
-    print('Finding user and followers and following them')
-
-    try:
-        check_rate_limit_remaining()
-    except tweepy.TweepError as e:
-        print('Error Message: ' + get_exception_message(e.reason))
-
-    f_user = api.get_user(follower_id)
-    user = api.me()
-
-    f_followers = api.followers(follower_id)
-
-    if (user.friends_count < 1000) and (user.followers_count + 500) < 1000:
-        i = 10
-        for i, follower in enumerate(f_followers):
-            try:
-                if (user.friends_count < 1000) and (user.followers_count + 500) < 1000:
-                    print('Following has been put on hold till followers pick up')
-                    break
-
-                if follower.following:
-                    print('Already following ' + follower.name + ' so moving on...')
-                    continue
-                else:
-                    if follower.id == f_user.id:
-                        print('Not following self, passing on...')
-                        continue
-                    else:
-                        if check_rate_limit_remaining() > 160:
-                            follower.follow()
-                            print("Followed everyone that is following " + f_user.name)
-                        else:
-                            print('Follow limit exceeded, no more following for now')
-                            break
 
             except tweepy.TweepError as e:
                 print('Error Message: ' + get_exception_message(e.reason))
@@ -221,9 +221,17 @@ def update_user_status_hacker_news():
     print('\n')
     print('getting latest news from hacker_news and updating user status...', flush=True)
 
-    hn = HackerNews()
+    print('checking remaining request count...')
+    try:
+        remaining = api.rate_limit_status()['resources']['application']['/application/rate_limit_status']['remaining']
+    except tweepy.TweepError as e:
+        print('Error Message: ' + get_exception_message(e.reason))
 
-    stories = hn.top_stories(limit=15)
+    try:
+        hn = HackerNews()
+        stories = hn.top_stories(limit=15)
+    except tweepy.TweepError as e:
+        print('Error Message: ' + get_exception_message(e.reason))
 
     for story in stories:
         try:
@@ -233,7 +241,7 @@ def update_user_status_hacker_news():
             lid = story.item_id
 
             if lid > lid_r:
-                if check_rate_limit_remaining() > 100:
+                if remaining > 100:
                     print('hacker_news top story, responding, liking and re-tweeting now', flush=True)
 
                     tweet = api.update_status(
@@ -262,15 +270,24 @@ def update_user_status_news_api():
     print('\n')
     print('getting latest news from news_api and updating user status...', flush=True)
 
-    url = ('https://newsapi.org/v2/top-headlines?country=us&apiKey=' + NEWS_API_KEY)
-    response = requests.get(url)
-    top_headlines = response.json()
+    print('checking remaining request count...')
+    try:
+        remaining = api.rate_limit_status()['resources']['application']['/application/rate_limit_status']['remaining']
+    except tweepy.TweepError as e:
+        print('Error Message: ' + get_exception_message(e.reason))
+
+    try:
+        url = ('https://newsapi.org/v2/top-headlines?country=us&apiKey=' + NEWS_API_KEY)
+        response = requests.get(url)
+        top_headlines = response.json()
+    except tweepy.TweepError as e:
+        print('Error Message: ' + get_exception_message(e.reason))
 
     if top_headlines['status'] == 'ok':
         for headline in top_headlines['articles']:
             try:
 
-                if check_rate_limit_remaining() > 100:
+                if remaining > 100:
                     print('news_api top story, responding, liking and re-tweeting now', flush=True)
                     tweet = api.update_status(
                         str(headline['title']) + '\n' +
@@ -298,15 +315,31 @@ def update_user_status_news_api():
 
 
 while True:
-    update_follow_followers()
-    update_user_status_hacker_news()
-    update_user_status_news_api()
-    update_user_mentions()
-    update_home_timeline()
+    # 15 minutes
+    timeout = 1200
 
-    for minutes in range(0, 59):
-        if minutes not in {0, 15, 30, 45}:
-            snooze = 15 - minutes % 15
-            print('minutes:', minutes, ' sleep({}):'.format(snooze * 60))
-        else:
-            print('minutes:', minutes, ' no sleep')
+    # following
+    try:
+        follow_followers = task.LoopingCall(update_follow_followers())
+        follow_followers.start(timeout)
+    except tweepy.TweepError as e:
+        print('Error Message: ' + get_exception_message(e.reason))
+
+    # timeline
+    home_timeline = task.LoopingCall(update_home_timeline())
+    home_timeline.start(timeout)
+
+    # mentions
+    mentions = task.LoopingCall(update_user_mentions())
+    mentions.start(timeout)
+
+    # hacker_news
+    hacker_news = task.LoopingCall(update_user_status_hacker_news())
+    hacker_news.start(timeout)
+
+    # news_api
+    news_api = task.LoopingCall(update_user_status_news_api())
+    news_api.start(timeout)
+
+    # boot
+    reactor.run()
