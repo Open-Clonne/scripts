@@ -12,17 +12,6 @@ api = tweepy.API(auth)
 CLONNEBOTS = '@natgraybillz @GurdipPradip @jptwerpsall @clonne101'
 
 
-def check_rate_limit_remaining():
-    print('\n')
-    print('checking remaining request count...')
-
-    try:
-        remaining = api.rate_limit_status()['resources']['application']['/application/rate_limit_status']['remaining']
-        return remaining
-    except tweepy.TweepError as e:
-        print('Error Message: ' + get_exception_message(e.reason))
-
-
 def retrieve_id(file_name):
     f_read = open(file_name, 'r')
     lid = int(f_read.read().strip())
@@ -51,6 +40,17 @@ def get_exception_message(msg):
     return error_message
 
 
+def check_rate_limit_remaining():
+    print('\n')
+    print('checking remaining request count...')
+
+    try:
+        remaining = api.rate_limit_status()['resources']['application']['/application/rate_limit_status']['remaining']
+        return remaining
+    except tweepy.TweepError as e:
+        print('Error Message: ' + get_exception_message(e.reason))
+
+
 def update_user_mentions():
     print('\n')
     print('retrieving and replying to hash-tags...', flush=True)
@@ -58,6 +58,11 @@ def update_user_mentions():
     lid = retrieve_id('user_status.txt')
     if not lid:
         print('no lid found')
+
+    try:
+        check_rate_limit_remaining()
+    except tweepy.TweepError as e:
+        print('Error Message: ' + get_exception_message(e.reason))
 
     mentions = api.mentions_timeline(lid, tweet_mode='extended')
 
@@ -93,6 +98,11 @@ def update_home_timeline():
     if not lid:
         print('no lid found')
 
+    try:
+        check_rate_limit_remaining()
+    except tweepy.TweepError as e:
+        print('Error Message: ' + get_exception_message(e.reason))
+
     timeline = api.home_timeline(lid)
 
     for timeline_tweet in reversed(timeline):
@@ -119,6 +129,11 @@ def update_home_timeline():
 def update_follow_followers():
     print('\n')
     print('following all new followers...', flush=True)
+
+    try:
+        check_rate_limit_remaining()
+    except tweepy.TweepError as e:
+        print('Error Message: ' + get_exception_message(e.reason))
 
     user = api.me()
     followers = api.followers(user.id)
@@ -157,6 +172,11 @@ def update_follow_followers():
 def find_user_followers(follower_id):
     print('\n')
     print('Finding user and followers and following them')
+
+    try:
+        check_rate_limit_remaining()
+    except tweepy.TweepError as e:
+        print('Error Message: ' + get_exception_message(e.reason))
 
     f_user = api.get_user(follower_id)
     user = api.me()
