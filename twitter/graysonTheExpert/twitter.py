@@ -104,10 +104,8 @@ def update_follow_followers():
 
     user = api.me()
     followers = api.followers(user.id)
-    print(user.__dict__.keys())
-    exit()
 
-    if (user.friends_count < 2000) and (user.followers_count + 1000) < 2000:
+    if (user.friends_count < 1000) and (user.followers_count + 500) < 1000:
         for follower in reversed(followers):
             try:
                 if not follower.following:
@@ -130,7 +128,6 @@ def update_follow_followers():
         print('Following has been put on hold till followers pick up')
 
 
-
 def find_user_followers(follower_id):
     print('\n')
     print('Finding user and followers and following them')
@@ -140,11 +137,11 @@ def find_user_followers(follower_id):
 
     f_followers = api.followers(follower_id)
 
-    if (user.friends_count < 2000) and (user.followers_count + 1000) < 2000:
+    if (user.friends_count < 1000) and (user.followers_count + 500) < 1000:
         i = 5
         for i, follower in enumerate(f_followers):
             try:
-                if (user.friends_count < 2000) and (user.followers_count + 1000) < 2000:
+                if (user.friends_count < 1000) and (user.followers_count + 500) < 1000:
                     print('Following has been put on hold till followers pick up')
                     break
 
@@ -234,9 +231,9 @@ def update_user_status_news_api():
 
 
 while True:
-    #update_user_mentions()
-    #update_home_timeline()
-    #update_user_status_hacker_news()
-    #update_user_status_news_api()
+    update_user_mentions()
+    update_home_timeline()
+    update_user_status_hacker_news()
+    update_user_status_news_api()
     update_follow_followers()
     time.sleep(500)
