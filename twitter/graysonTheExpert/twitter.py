@@ -10,7 +10,7 @@ auth = tweepy.OAuthHandler(CONSUMER_KEY, CONSUMER_SECRET)
 auth.set_access_token(ACCESS_KEY, ACCESS_SECRET)
 api = tweepy.API(auth)
 
-CLONNEBOTS = '@natgraybillz @GurdipPradip @jptwerpsall @clonne101'
+CLONNEBOTS = '@natgraybillz @GurdipPradip @jptwerpsall'
 
 
 def retrieve_id(file_name):
@@ -50,11 +50,13 @@ def update_user_mentions():
         print('no lid found')
 
     print('checking remaining request count...')
+    remaining = None
     try:
         remaining = api.rate_limit_status()['resources']['application']['/application/rate_limit_status']['remaining']
     except tweepy.TweepError as e:
         print('Error Message: ' + get_exception_message(e.reason))
 
+    mentions = None
     try:
         mentions = api.mentions_timeline(lid, tweet_mode='extended')
     except tweepy.TweepError as e:
@@ -67,6 +69,13 @@ def update_user_mentions():
 
                 if '#graytheexpert' in mention.full_text.lower():
                     print('found hash-tag and responding, liking and re-tweeting now', flush=True)
+                    api.update_status(
+                        '@' + mention.user.screen_name + ' good read there, thanks sir, happy tweeting #grayTheExpert', mention.id
+                    )
+                    api.retweet(mention.id)
+                    mention.favorite()
+                else:
+                    print('no hash-tag found so responding, liking and re-tweeting now', flush=True)
                     api.update_status(
                         '@' + mention.user.screen_name + ' good read there, thanks sir #grayTheExpert', mention.id
                     )
@@ -95,11 +104,13 @@ def update_home_timeline():
         print('no lid found')
 
     print('checking remaining request count...')
+    remaining = None
     try:
         remaining = api.rate_limit_status()['resources']['application']['/application/rate_limit_status']['remaining']
     except tweepy.TweepError as e:
         print('Error Message: ' + get_exception_message(e.reason))
 
+    timeline = None
     try:
         timeline = api.home_timeline(lid)
     except tweepy.TweepError as e:
@@ -137,8 +148,8 @@ def update_follow_followers():
     except tweepy.TweepError as e:
         print('Error Message: ' + get_exception_message(e.reason))
 
-    followers = []
-    user = []
+    followers = None
+    user = None
     try:
         user = api.me()
         followers = api.followers(user.id)
@@ -166,6 +177,7 @@ def update_follow_followers():
                         print('\n')
                         print('Finding user and followers and following them')
 
+                        f_user = None
                         try:
                             f_user = api.get_user(follower.id)
                         except tweepy.TweepError as e:
@@ -222,11 +234,13 @@ def update_user_status_hacker_news():
     print('getting latest news from hacker_news and updating user status...', flush=True)
 
     print('checking remaining request count...')
+    remaining = None
     try:
         remaining = api.rate_limit_status()['resources']['application']['/application/rate_limit_status']['remaining']
     except tweepy.TweepError as e:
         print('Error Message: ' + get_exception_message(e.reason))
 
+    stories = None
     try:
         hn = HackerNews()
         stories = hn.top_stories(limit=15)
@@ -251,7 +265,6 @@ def update_user_status_hacker_news():
                     print('saving new lid now')
                     store_id(lid, 'hacker_news.txt')
 
-                    tweet.retweet()
                     tweet.favorite()
                 else:
                     print('Status update limit has been reached for now...')
@@ -271,11 +284,13 @@ def update_user_status_news_api():
     print('getting latest news from news_api and updating user status...', flush=True)
 
     print('checking remaining request count...')
+    remaining = None
     try:
         remaining = api.rate_limit_status()['resources']['application']['/application/rate_limit_status']['remaining']
     except tweepy.TweepError as e:
         print('Error Message: ' + get_exception_message(e.reason))
 
+    top_headlines = None
     try:
         url = ('https://newsapi.org/v2/top-headlines?country=us&apiKey=' + NEWS_API_KEY)
         response = requests.get(url)
@@ -284,7 +299,8 @@ def update_user_status_news_api():
         print('Error Message: ' + get_exception_message(e.reason))
 
     if top_headlines['status'] == 'ok':
-        for headline in top_headlines['articles']:
+        articles = top_headlines['articles'][:5]
+        for headline in articles:
             try:
 
                 if remaining > 100:
@@ -296,7 +312,6 @@ def update_user_status_news_api():
                         '#newsapi' + '\n' +
                         CLONNEBOTS
                     )
-                    tweet.retweet()
                     tweet.favorite()
                 else:
                     print('Status update limit has been reached for now...')
@@ -316,37 +331,37 @@ def update_user_status_news_api():
 
 while True:
     # 15 minutes
-    timeout = 950.0
+    timeout = 2000.0
 
     # following
     try:
         update_follow_followers()
     except Exception as e:
-        print('Error Message: ' + get_exception_message(e.reason))
+        print('Error Message: ' + str(e))
 
     # timeline
     try:
         update_home_timeline()
     except Exception as e:
-        print('Error Message: ' + get_exception_message(e.reason))
+        print('Error Message: ' + str(e))
 
     # mentions
     try:
         update_user_mentions()
     except Exception as e:
-        print('Error Message: ' + get_exception_message(e.reason))
+        print('Error Message: ' + str(e))
 
     # hacker_news
     try:
         update_user_status_hacker_news()
     except Exception as e:
-        print('Error Message: ' + get_exception_message(e.reason))
+        print('Error Message: ' + str(e))
 
     # news_api
     try:
         update_user_status_news_api()
     except Exception as e:
-        print('Error Message: ' + get_exception_message(e.reason))
+        print('Error Message: ' + str(e))
 
     # boot
     time.sleep(timeout)
