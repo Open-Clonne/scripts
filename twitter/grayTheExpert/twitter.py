@@ -10,8 +10,6 @@ auth = tweepy.OAuthHandler(CONSUMER_KEY, CONSUMER_SECRET)
 auth.set_access_token(ACCESS_KEY, ACCESS_SECRET)
 api = tweepy.API(auth)
 
-CLONNEBOTS = '@natgraybillz @GurdipPradip @jptwerpsall'
-
 
 def retrieve_id(file_name):
     f_read = open(file_name, 'r')
@@ -259,7 +257,7 @@ def update_user_status_hacker_news():
                     print('hacker_news top story, responding, liking and re-tweeting now', flush=True)
 
                     tweet = api.update_status(
-                        str(story.title) + '\n' + str(story.url) + '\n By: ' + str(story.by) + '\n' + '#hackernews' + '\n' + CLONNEBOTS
+                        str(story.title) + '\n' + str(story.url) + '\n By: ' + str(story.by) + '\n' + '#hackernews'
                     )
 
                     print('saving new lid now')
@@ -309,8 +307,7 @@ def update_user_status_news_api():
                         str(headline['title']) + '\n' +
                         str(headline['url']) + '\n By: ' +
                         str(headline['source']['name']) + '\n' +
-                        '#newsapi' + '\n' +
-                        CLONNEBOTS
+                        '#newsapi'
                     )
                     tweet.favorite()
                 else:
@@ -330,38 +327,38 @@ def update_user_status_news_api():
 
 
 while True:
-    # 15 minutes
-    timeout = 2000.0
 
     # following
     try:
         update_follow_followers()
+        time.sleep(2000.0)
     except Exception as e:
         print('Error Message: ' + str(e))
 
     # timeline
     try:
         update_home_timeline()
+        time.sleep(3000.0)
     except Exception as e:
         print('Error Message: ' + str(e))
 
     # mentions
     try:
         update_user_mentions()
+        time.sleep(4000.0)
     except Exception as e:
         print('Error Message: ' + str(e))
 
     # hacker_news
     try:
         update_user_status_hacker_news()
+        time.sleep(5000.0)
     except Exception as e:
         print('Error Message: ' + str(e))
 
     # news_api
     try:
         update_user_status_news_api()
+        time.sleep(6000.0)
     except Exception as e:
         print('Error Message: ' + str(e))
-
-    # boot
-    time.sleep(timeout)
