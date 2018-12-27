@@ -328,37 +328,38 @@ def update_user_status_news_api():
 
 while True:
 
+    # timeout
+    timeout = 20000.0
+
     # following
     try:
         update_follow_followers()
-        time.sleep(2000.0)
     except Exception as e:
         print('Error Message: ' + str(e))
 
     # timeline
     try:
         update_home_timeline()
-        time.sleep(3000.0)
     except Exception as e:
         print('Error Message: ' + str(e))
 
     # mentions
     try:
         update_user_mentions()
-        time.sleep(4000.0)
     except Exception as e:
         print('Error Message: ' + str(e))
 
     # hacker_news
     try:
         update_user_status_hacker_news()
-        time.sleep(5000.0)
     except Exception as e:
         print('Error Message: ' + str(e))
 
     # news_api
     try:
         update_user_status_news_api()
-        time.sleep(6000.0)
     except Exception as e:
         print('Error Message: ' + str(e))
+
+    # boot
+    time.sleep(timeout)
