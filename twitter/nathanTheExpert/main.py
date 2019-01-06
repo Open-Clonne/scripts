@@ -4,7 +4,7 @@ import requests
 from keys import *
 from hackernews import HackerNews
 
-print('booting up clonneBot[Grayson]', flush=True)
+print('booting up clonneBot[Nathan]', flush=True)
 
 auth = tweepy.OAuthHandler(CONSUMER_KEY, CONSUMER_SECRET)
 auth.set_access_token(ACCESS_KEY, ACCESS_SECRET)
