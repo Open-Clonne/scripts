@@ -355,4 +355,4 @@ while True:
         print('Error Message: ' + str(e))
 
     # boot
-    # time.sleep(timeout)
+    time.sleep(timeout)
