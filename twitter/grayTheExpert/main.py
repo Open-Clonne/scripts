@@ -68,14 +68,14 @@ def update_user_mentions():
                 if '#graytheexpert' in mention.full_text.lower():
                     print('found hash-tag and responding, liking and re-tweeting now', flush=True)
                     api.update_status(
-                        '@' + mention.user.screen_name + ' good read there, thanks sir, happy tweeting #grayTheExpert', mention.id
+                        '@' + mention.user.screen_name + ' good read there, thanks sir, happy tweeting ' + HASH_TAGS, mention.id
                     )
                     api.retweet(mention.id)
                     mention.favorite()
                 else:
                     print('no hash-tag found so responding, liking and re-tweeting now', flush=True)
                     api.update_status(
-                        '@' + mention.user.screen_name + ' good read there, thanks sir #grayTheExpert', mention.id
+                        '@' + mention.user.screen_name + ' good read there, thanks! ' + HASH_TAGS, mention.id
                     )
                     api.retweet(mention.id)
                     mention.favorite()
@@ -254,10 +254,10 @@ def update_user_status_hacker_news():
 
             if lid > lid_r:
                 if remaining > 100:
-                    print('hacker_news top story, responding, liking and re-tweeting now', flush=True)
+                    print('hacker_news top story, liking and tweeting now', flush=True)
 
                     tweet = api.update_status(
-                        str(story.title) + '\n' + str(story.url) + '\n By: ' + str(story.by) + '\n' + '#hackernews'
+                        str(story.title) + '\n' + str(story.url) + '\n By: ' + str(story.by) + '\n' + HASH_TAGS
                     )
 
                     print('saving new lid now')
@@ -302,12 +302,12 @@ def update_user_status_news_api():
             try:
 
                 if remaining > 100:
-                    print('news_api top story, responding, liking and re-tweeting now', flush=True)
+                    print('news_api top story, liking and tweeting now', flush=True)
                     tweet = api.update_status(
                         str(headline['title']) + '\n' +
                         str(headline['url']) + '\n By: ' +
                         str(headline['source']['name']) + '\n' +
-                        '#newsapi'
+                        HASH_TAGS
                     )
                     tweet.favorite()
                 else:
