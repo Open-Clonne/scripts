@@ -1,7 +1,12 @@
+import os
 import time
 import tweepy
+import pyttsx3
 from keys import *
+from gtts import gTTS
+from pygame import mixer
 
+print('\n')
 print('booting up reporterBot[Grayson]', flush=True)
 
 auth = tweepy.OAuthHandler(CONSUMER_KEY, CONSUMER_SECRET)
@@ -9,16 +14,23 @@ auth.set_access_token(ACCESS_KEY, ACCESS_SECRET)
 api = tweepy.API(auth)
 
 
-def retrieve_id(file_name):
+def delete_audio():
+    if os.path.exists("follow.mp3"):
+        print('Deleting old audio file now')
+        os.remove('follow.mp3')
+    else:
+        print('No audio file found')
+
+def retrieve_f_store(file_name):
     f_read = open(file_name, 'r')
     lid = int(f_read.read().strip())
     f_read.close()
     return lid
 
 
-def store_id(lid, file_name):
+def store_f(fid, file_name):
     f_write = open(file_name, 'w')
-    f_write.write(str(lid))
+    f_write.write(str(fid))
     f_write.close()
     return
 
@@ -37,13 +49,13 @@ def get_exception_message(msg):
     return error_message
 
 
-def update_user_mentions():
+def get_follower_count_reporter():
     print('\n')
-    print('retrieving and replying to hash-tags...', flush=True)
+    print('retrieving and announcing current followers...', flush=True)
 
-    lid = retrieve_id('user_status.txt')
-    if not lid:
-        print('no lid found')
+    fid = retrieve_f_store('followers.txt')
+    if not str(fid):
+        print('no fid found')
 
     print('checking remaining request count...')
     remaining = None
@@ -52,53 +64,67 @@ def update_user_mentions():
     except tweepy.TweepError as e:
         print('Error Message: ' + get_exception_message(e.reason))
 
-    mentions = None
+    followers = None
     try:
-        mentions = api.mentions_timeline(lid, tweet_mode='extended')
+        user = user = api.me()
+        followers = user.followers_count
+
+        print('storing current follower count')
+        store_f(followers, 'followers.txt')
+
+        if followers >= fid:
+            print('calculating follow difference')
+            prev_f = followers - fid
+
+            msg = None
+            if prev_f == 0:
+                msg = 'do not worry it will pick up soon.'
+
+                print('announcing current followers in male voice now')
+                engine = pyttsx3.init()
+                engine.say(str(user.screen_name) + ' currently has ' + 
+                    str(followers) + ' followers, with ' + str(prev_f) + 
+                    ' increase as at now, ' + msg)
+                engine.runAndWait()
+                print ("All done now")
+            else:
+                msg = 'Hurray!!!.'
+
+                delete_audio()
+
+                print('announcing current followers in female voice now')
+                print('compiling and saving audio file now')
+                tts = gTTS(str(user.screen_name) + ' currently has ' + 
+                    str(followers) + ' followers, with ' + str(prev_f) + 
+                    ' increase as at now, ' + msg, 'en', False, True, [])
+                tts.save('follow.mp3')
+
+                print('playing audio file now')
+                mixer.init()
+                mixer.music.load('follow.mp3')
+                mixer.music.play()
+                while mixer.music.get_busy():
+                    time.sleep(1)
+                    print('still playing audio')
+
+                print('quit audio player now')
+                mixer.quit()
+                delete_audio()
+
+                print ("All done now")
+
     except tweepy.TweepError as e:
         print('Error Message: ' + get_exception_message(e.reason))
-
-    for mention in reversed(mentions):
-        try:
-
-            if remaining > 30:
-
-                if '#graytheexpert' in mention.full_text.lower():
-                    print('found hash-tag and responding, liking and re-tweeting now', flush=True)
-                    api.update_status(
-                        '@' + mention.user.screen_name + ' good read there, thanks sir, happy tweeting ' + HASH_TAGS, mention.id
-                    )
-                    api.retweet(mention.id)
-                    mention.favorite()
-                else:
-                    print('no hash-tag found so responding, liking and re-tweeting now', flush=True)
-                    api.update_status(
-                        '@' + mention.user.screen_name + ' good read there, thanks! ' + HASH_TAGS, mention.id
-                    )
-                    api.retweet(mention.id)
-                    mention.favorite()
-
-                lid = mention.id
-                store_id(lid, 'user_status.txt')
-
-            else:
-                print('User mention respond, liking and re-tweeting exceeded for now...')
-
-        except tweepy.TweepError as e:
-            print('Error Message: ' + get_exception_message(e.reason))
-
-        except StopIteration:
-            break
 
 
 while True:
 
     # timeout
-    timeout = 10000.0
+    timeout = 100.0
 
-    # mentions
+    # followers count reporter
     try:
-        update_user_mentions()
+        get_follower_count_reporter()
     except Exception as e:
         print('Error Message: ' + str(e))
 
