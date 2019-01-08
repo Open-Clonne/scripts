@@ -68,64 +68,52 @@ def get_follower_count_reporter():
         user = user = api.me()
         followers = user.followers_count
 
+        print('calculating follow difference')
+        increase = None
+        decrease = None
+        if followers < fid:
+            decrease = fid - followers
+        else:
+            decrease = 0
+
+        if followers > fid:
+            increase = followers - fid
+        else:
+            increase = 0
+
+        msg = None
+        if increase == 0 and decrease >= 0:
+            msg = 'no worries, we are growing steadily!!!'
+        else:
+            msg = 'Hurray!!!.'
+
+        delete_audio()
+
+        print('announcing current followers in female voice now')
+        print('compiling and saving audio file now')
+        tts = gTTS(str(user.screen_name) + ' currently has ' + 
+                str(followers) + ' followers, with ' + str(increase) + 
+                ' increase and ' + str(decrease) + ' decrease as at now, ' + 
+                msg, 'en', False, True, [])
+        tts.save('follow.mp3')
+
+        print('playing audio file now')
+        mixer.init()
+        mixer.music.load('follow.mp3')
+        mixer.music.play()
+        while mixer.music.get_busy():
+            time.sleep(1)
+            print('still playing audio')
+
+        print('quit audio player now')
+        mixer.quit()
+
+        delete_audio()
+
         print('storing current follower count')
         store_f(followers, 'followers.txt')
 
-        if followers >= fid:
-            print('calculating follow difference')
-            prev_f = followers - fid
-
-            msg = None
-            if prev_f == 0:
-                msg = 'do not worry it will pick up soon.'
-
-                delete_audio()
-
-                print('announcing current followers in female voice now')
-                print('compiling and saving audio file now')
-                tts = gTTS(str(user.screen_name) + ' currently has ' + 
-                    str(followers) + ' followers, with ' + str(prev_f) + 
-                    ' increase as at now, ' + msg, 'en', False, True, [])
-                tts.save('follow.mp3')
-
-                print('playing audio file now')
-                mixer.init()
-                mixer.music.load('follow.mp3')
-                mixer.music.play()
-                while mixer.music.get_busy():
-                    time.sleep(1)
-                    print('still playing audio')
-
-                print('quit audio player now')
-                mixer.quit()
-                delete_audio()
-
-                print ("All done now")
-            else:
-                msg = 'Hurray!!!.'
-
-                delete_audio()
-
-                print('announcing current followers in female voice now')
-                print('compiling and saving audio file now')
-                tts = gTTS(str(user.screen_name) + ' currently has ' + 
-                    str(followers) + ' followers, with ' + str(prev_f) + 
-                    ' increase as at now, ' + msg, 'en', False, True, [])
-                tts.save('follow.mp3')
-
-                print('playing audio file now')
-                mixer.init()
-                mixer.music.load('follow.mp3')
-                mixer.music.play()
-                while mixer.music.get_busy():
-                    time.sleep(1)
-                    print('still playing audio')
-
-                print('quit audio player now')
-                mixer.quit()
-                delete_audio()
-
-                print ("All done now")
+        print ("All done now")
 
     except tweepy.TweepError as e:
         print('Error Message: ' + get_exception_message(e.reason))
