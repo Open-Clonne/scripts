@@ -329,7 +329,7 @@ def update_user_status_news_api():
 while True:
 
     # timeout
-    timeout = 10000.0
+    timeout = 1000.0
 
     # following
     try:
