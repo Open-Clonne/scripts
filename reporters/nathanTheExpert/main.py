@@ -122,7 +122,7 @@ def get_follower_count_reporter():
 while True:
 
     # timeout
-    timeout = 200.0
+    timeout = 500.0
 
     # followers count reporter
     try:
