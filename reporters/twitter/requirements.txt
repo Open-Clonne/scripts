@@ -1,6 +1,5 @@
 tweepy>=3.6.0
 haxor>=1.2.1
 requests>=2.21.0
-pyttsx3>=2.7
 gTTS>=2.0.3
 pygame>=1.9.4

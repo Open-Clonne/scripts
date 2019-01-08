@@ -1,8 +1,8 @@
 import os
 import time
 import tweepy
-import pyttsx3
 from keys import *
+from gtts import gTTS
 from pygame import mixer
 
 print('\n')
