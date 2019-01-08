@@ -2,9 +2,8 @@ import time
 import tweepy
 import requests
 from keys import *
-from hackernews import HackerNews
 
-print('booting up clonneBot[Gurdip]', flush=True)
+print('booting up clonneBot[Jones]', flush=True)
 
 auth = tweepy.OAuthHandler(CONSUMER_KEY, CONSUMER_SECRET)
 auth.set_access_token(ACCESS_KEY, ACCESS_SECRET)
@@ -227,9 +226,9 @@ def update_follow_followers():
         print('Following has been put on hold till followers pick up')
 
 
-def update_user_status_hacker_news():
+def update_user_status_sexaprice_api():
     print('\n')
-    print('getting latest news from hacker_news and updating user status...', flush=True)
+    print('getting latest news from sexaprice.com and updating user status...', flush=True)
 
     print('checking remaining request count...')
     remaining = None
@@ -238,75 +237,25 @@ def update_user_status_hacker_news():
     except tweepy.TweepError as e:
         print('Error Message: ' + get_exception_message(e.reason))
 
-    stories = None
+    new_sites = None
     try:
-        hn = HackerNews()
-        stories = hn.top_stories(limit=15)
-    except tweepy.TweepError as e:
-        print('Error Message: ' + get_exception_message(e.reason))
-
-    for story in stories:
-        try:
-
-            lid_r = retrieve_id('hacker_news.txt')
-
-            lid = story.item_id
-
-            if lid > lid_r:
-                if remaining > 100:
-                    print('hacker_news top story, liking and tweeting now', flush=True)
-
-                    tweet = api.update_status(
-                        str(story.title) + '\n' + str(story.url) + '\n By: ' + str(story.by) + '\n' + HASH_TAGS
-                    )
-
-                    print('saving new lid now')
-                    store_id(lid, 'hacker_news.txt')
-
-                    tweet.favorite()
-                else:
-                    print('Status update limit has been reached for now...')
-                    break
-            else:
-                print('no new top stories are available at this time', flush=True)
-
-        except tweepy.TweepError as e:
-            print('Error Message: ' + get_exception_message(e.reason))
-
-        except StopIteration:
-            break
-
-
-def update_user_status_news_api():
-    print('\n')
-    print('getting latest news from news_api and updating user status...', flush=True)
-
-    print('checking remaining request count...')
-    remaining = None
-    try:
-        remaining = api.rate_limit_status()['resources']['application']['/application/rate_limit_status']['remaining']
-    except tweepy.TweepError as e:
-        print('Error Message: ' + get_exception_message(e.reason))
-
-    top_headlines = None
-    try:
-        url = ('https://newsapi.org/v2/top-headlines?country=us&apiKey=' + NEWS_API_KEY)
+        url = ('http://www.sexaprize.com/api/new.json')
         response = requests.get(url)
-        top_headlines = response.json()
+        new_sites = response.json()
     except tweepy.TweepError as e:
         print('Error Message: ' + get_exception_message(e.reason))
 
-    if top_headlines['status'] == 'ok':
-        articles = top_headlines['articles'][:5]
-        for headline in articles:
+    if len(new_sites) > 0:
+        for key, value in new_sites.items():
+
             try:
 
                 if remaining > 100:
-                    print('news_api top story, liking and tweeting now', flush=True)
+                    print('posting sexaprize link ' + value + ' update, liking and tweeting now', flush=True)
                     tweet = api.update_status(
-                        str(headline['title']) + '\n' +
-                        str(headline['url']) + '\n By: ' +
-                        str(headline['source']['name']) + '\n' +
+                        'http://' + str(value) + '\n' +
+                        '\n By: ' +
+                        'AdultLoggs & SexaPrize' + '\n' +
                         HASH_TAGS
                     )
                     tweet.favorite()
@@ -323,7 +272,7 @@ def update_user_status_news_api():
             except StopIteration:
                 break
     else:
-        print('Could not get top_headlines from news_api')
+        print('No results returned from sexaprize')
 
 
 while True:
@@ -337,29 +286,23 @@ while True:
     except Exception as e:
         print('Error Message: ' + str(e))
 
-    # timeline
+    # # timeline
     try:
         update_home_timeline()
     except Exception as e:
         print('Error Message: ' + str(e))
 
-    # mentions
+    # # mentions
     try:
         update_user_mentions()
     except Exception as e:
         print('Error Message: ' + str(e))
 
-    # hacker_news
+    # sexaprice_api
     try:
-        update_user_status_hacker_news()
-    except Exception as e:
-        print('Error Message: ' + str(e))
-
-    # news_api
-    try:
-        update_user_status_news_api()
+        update_user_status_sexaprice_api()
     except Exception as e:
         print('Error Message: ' + str(e))
 
     # boot
-    time.sleep(timeout)
+time.sleep(timeout)
