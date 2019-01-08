@@ -6,7 +6,7 @@ from gtts import gTTS
 from pygame import mixer
 
 print('\n')
-print('booting up reporterBot[Twitter]', flush=True)
+print('booting up reporterBot[grayTheExpert]', flush=True)
 
 auth = tweepy.OAuthHandler(CONSUMER_KEY, CONSUMER_SECRET)
 auth.set_access_token(ACCESS_KEY, ACCESS_SECRET)
