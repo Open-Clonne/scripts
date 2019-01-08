@@ -3,11 +3,10 @@ import time
 import tweepy
 import pyttsx3
 from keys import *
-from gtts import gTTS
 from pygame import mixer
 
 print('\n')
-print('booting up reporterBot[Grayson]', flush=True)
+print('booting up reporterBot[Twitter]', flush=True)
 
 auth = tweepy.OAuthHandler(CONSUMER_KEY, CONSUMER_SECRET)
 auth.set_access_token(ACCESS_KEY, ACCESS_SECRET)
@@ -80,12 +79,27 @@ def get_follower_count_reporter():
             if prev_f == 0:
                 msg = 'do not worry it will pick up soon.'
 
-                print('announcing current followers in male voice now')
-                engine = pyttsx3.init()
-                engine.say(str(user.screen_name) + ' currently has ' + 
+                delete_audio()
+
+                print('announcing current followers in female voice now')
+                print('compiling and saving audio file now')
+                tts = gTTS(str(user.screen_name) + ' currently has ' + 
                     str(followers) + ' followers, with ' + str(prev_f) + 
-                    ' increase as at now, ' + msg)
-                engine.runAndWait()
+                    ' increase as at now, ' + msg, 'en', False, True, [])
+                tts.save('follow.mp3')
+
+                print('playing audio file now')
+                mixer.init()
+                mixer.music.load('follow.mp3')
+                mixer.music.play()
+                while mixer.music.get_busy():
+                    time.sleep(1)
+                    print('still playing audio')
+
+                print('quit audio player now')
+                mixer.quit()
+                delete_audio()
+
                 print ("All done now")
             else:
                 msg = 'Hurray!!!.'
