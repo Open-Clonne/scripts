@@ -6,6 +6,8 @@ from gtts import gTTS
 from pygame import mixer
 
 print('\n')
+print('boot wait...')
+time.sleep(60)
 print('booting up reporterBot[jonesTheExpert]', flush=True)
 
 auth = tweepy.OAuthHandler(CONSUMER_KEY, CONSUMER_SECRET)
