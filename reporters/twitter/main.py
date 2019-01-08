@@ -7,7 +7,7 @@ from pygame import mixer
 
 
 print('\n')
-print('booting up reporterBot[grayTheExpert]', flush=True)
+print('booting up reporterBot', flush=True)
 
 
 # grayTheExpert
@@ -25,6 +25,11 @@ jones_api = tweepy.API(jones_auth)
 nat_auth = tweepy.OAuthHandler(NAT_CONSUMER_KEY, NAT_CONSUMER_SECRET)
 nat_auth.set_access_token(NAT_ACCESS_KEY, NAT_ACCESS_SECRET)
 nat_api = tweepy.API(nat_auth)
+
+# linusTheExpert
+lin_auth = tweepy.OAuthHandler(LIN_CONSUMER_KEY, LIN_CONSUMER_SECRET)
+lin_auth.set_access_token(LIN_ACCESS_KEY, LIN_ACCESS_SECRET)
+lin_api = tweepy.API(lin_auth)
 
 
 def delete_audio(file_name):
@@ -98,7 +103,7 @@ def gray_followers():
 
         msg = None
         if increase == 0 and decrease >= 0:
-            msg = 'no worries, we are growing steadily!!!'
+            msg = 'great work guys!!!'
         else:
             msg = 'Hurray!!!.'
 
@@ -167,7 +172,7 @@ def jones_followers():
 
         msg = None
         if increase == 0 and decrease >= 0:
-            msg = 'no worries, we are growing steadily!!!'
+            msg = 'great work guys!!!'
         else:
             msg = 'Hurray!!!.'
 
@@ -236,7 +241,7 @@ def nat_followers():
 
         msg = None
         if increase == 0 and decrease >= 0:
-            msg = 'no worries, we are growing steadily!!!'
+            msg = 'great work guys!!!'
         else:
             msg = 'Hurray!!!.'
 
@@ -270,6 +275,75 @@ def nat_followers():
         print('Error Message: ' + get_exception_message(e.reason))
 
 
+def lin_followers():
+    print('\n')
+    print('linusTheExpert followers...', flush=True)
+
+    fid = retrieve_f_store('lin_f.txt')
+    if not str(fid):
+        print('no fid found')
+
+    print('checking remaining request count...')
+    remaining = None
+    try:
+        remaining = lin_api.rate_limit_status()['resources']['application']['/application/rate_limit_status']['remaining']
+    except tweepy.TweepError as e:
+        print('Error Message: ' + get_exception_message(e.reason))
+
+    followers = None
+    try:
+        user = user = lin_api.me()
+        followers = user.followers_count
+
+        print('calculating follow difference')
+        increase = None
+        decrease = None
+        if followers < fid:
+            decrease = fid - followers
+        else:
+            decrease = 0
+
+        if followers > fid:
+            increase = followers - fid
+        else:
+            increase = 0
+
+        msg = None
+        if increase == 0 and decrease >= 0:
+            msg = 'great work guys!!!'
+        else:
+            msg = 'Hurray!!!.'
+
+        delete_audio('lin_f.mp3')
+
+        print('announcing current followers in female voice now')
+        print('compiling and saving audio file now')
+        tts = gTTS(str(user.screen_name) + ' currently has ' + 
+                str(followers) + ' followers, with ' + str(increase) + 
+                ' increase and ' + str(decrease) + ' decrease as at now, ' + 
+                msg, 'en', False, True, [])
+        tts.save('lin_f.mp3')
+
+        print('playing audio file now')
+        mixer.init()
+        mixer.music.load('lin_f.mp3')
+        mixer.music.play()
+        while mixer.music.get_busy():
+            time.sleep(1)
+            print('still playing audio')
+
+        print('quit audio player now')
+        mixer.quit()
+
+        print('storing current follower count')
+        store_f(followers, 'lin_f.txt')
+
+        print ("All done now")
+
+    except tweepy.TweepError as e:
+        print('Error Message: ' + get_exception_message(e.reason))
+
+
 while True:
 
     # timeout
@@ -296,6 +370,15 @@ while True:
     # natTheExpert followers
     try:
         nat_followers()
+    except Exception as e:
+        print('Error Message: ' + str(e))
+
+    # boot
+    time.sleep(timeout)
+
+    # linTheExpert followers
+    try:
+        lin_followers()
     except Exception as e:
         print('Error Message: ' + str(e))
 
