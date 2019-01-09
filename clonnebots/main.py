@@ -4,7 +4,7 @@ import requests
 from keys import *
 from hackernews import HackerNews
 
-print('booting up clonneBot[Grayson]', flush=True)
+print('booting up clonneBot', flush=True)
 
 auth = tweepy.OAuthHandler(CONSUMER_KEY, CONSUMER_SECRET)
 auth.set_access_token(ACCESS_KEY, ACCESS_SECRET)
@@ -65,7 +65,7 @@ def update_user_mentions():
 
             if remaining > 30:
 
-                if '#graytheexpert' in mention.full_text.lower():
+                if MENTION_ID in mention.full_text.lower():
                     print('found hash-tag and responding, liking and re-tweeting now', flush=True)
                     api.update_status(
                         '@' + mention.user.screen_name + ' good read there, thanks sir, happy tweeting ' + HASH_TAGS, mention.id
@@ -328,7 +328,7 @@ def update_user_status_news_api():
 
 while True:
 
-    # timeout
+    # timeout(3hrs)
     timeout = 1000.0
 
     # following
