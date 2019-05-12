@@ -1,0 +1,6 @@
+version: '2'
+services:
+  twitter:
+    build: ./twitter
+    privileged: true
+    restart: always
