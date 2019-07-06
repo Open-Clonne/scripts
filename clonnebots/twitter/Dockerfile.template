@@ -8,6 +8,9 @@ WORKDIR /usr/src/app
 # Copy requirements.txt first for better cache on later pushes
 COPY ./requirements.txt /requirements.txt
 
+# Upgrade pip
+RUN pip install --upgrade pip
+
 # pip install python deps from requirements.txt on the resin.io build server
 RUN pip install -r /requirements.txt
 

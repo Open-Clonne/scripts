@@ -67,10 +67,12 @@ def update_user_mentions():
 
     mentions = None
     try:
-        mentions = api.mentions_timeline(lid, tweet_mode='extended')
+        if lid == 0:
+            mentions = api.mentions_timeline(None, tweet_mode='extended')
+        else:
+            mentions = api.mentions_timeline(lid, tweet_mode='extended')
     except tweepy.TweepError as e:
         print('Error Message: ' + get_exception_message(e.reason))
-
     for mention in reversed(mentions):
         try:
 
@@ -137,7 +139,10 @@ def update_home_timeline():
 
     timeline = None
     try:
-        timeline = api.home_timeline(lid)
+        if lid == 0:
+            timeline = api.home_timeline()
+        else:
+            timeline = api.home_timeline(lid)
     except tweepy.TweepError as e:
         print('Error Message: ' + get_exception_message(e.reason))
 
@@ -304,10 +309,11 @@ def update_follow_followers():
         print('Following has been put on hold till followers pick up')
 
 
+# loop and run
 while True:
 
-    # timeout(3hrs)
-    timeout = 1500.0
+    # timeout (5min)
+    timeout = time.time() + 60*180
 
     # following
     try:
