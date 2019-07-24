@@ -1,2 +1,2 @@
-flask==0.12.3
-requests>=2.21.0
+flask
+requests
